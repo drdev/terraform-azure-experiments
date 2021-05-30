@@ -1,0 +1,23 @@
+#cloud-config
+
+packages:
+  - nginx
+
+write_files:
+  - owner: www-data:www-data
+    path: /etc/nginx/sites-available/default
+    content: |
+      server {
+        listen 80;
+        root /var/www/html;
+        server_name _;
+
+        location /_status {
+          stub_status on;
+        }
+      }
+
+# Create default index.html with hostname
+runcmd:
+  - hostname -f | sudo tee /var/www/html/index.html
+  - systemctl restart nginx.service
