@@ -9,6 +9,12 @@ variable "environment" {
   }
 }
 
+variable "backend_pool_size" {
+  type        = number
+  default     = 1
+  description = "Number of VM instances to create in backend pool"
+}
+
 variable "admin" {
   type = object({
     username   = string

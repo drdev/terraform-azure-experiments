@@ -59,7 +59,7 @@ resource "azurerm_network_interface_security_group_association" "http" {
   network_interface_id = azurerm_network_interface.main[count.index].id
   network_security_group_id = azurerm_network_security_group.http.id
 
-  count = 2
+  count = var.backend_pool_size
 }
 
 resource "azurerm_network_interface" "main" {
@@ -73,7 +73,7 @@ resource "azurerm_network_interface" "main" {
     private_ip_address_allocation = "Dynamic"
   }
 
-  count = 2
+  count = var.backend_pool_size
 }
 
 resource "azurerm_linux_virtual_machine" "main" {
@@ -107,7 +107,7 @@ resource "azurerm_linux_virtual_machine" "main" {
     environment = local.environment
   }
 
-  count = 2
+  count = var.backend_pool_size
 }
 
 // Load Balancer Config
@@ -164,6 +164,6 @@ resource "azurerm_network_interface_backend_address_pool_association" "lb-backen
   network_interface_id    = azurerm_network_interface.main[count.index].id
   ip_configuration_name   = "internal"
   backend_address_pool_id = azurerm_lb_backend_address_pool.app-pool.id
-  count = 2
+  count = var.backend_pool_size
 }
 
