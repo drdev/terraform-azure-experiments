@@ -11,15 +11,15 @@ variable "environment" {
 
 variable "admin" {
   type = object({
-    username = string
+    username   = string
     public_key = string
   })
   default = {
-    username = "admin"
+    username   = "admin"
     public_key = ""
   }
   validation {
-    condition = length(var.admin.public_key) == 0
+    condition     = length(var.admin.public_key) != 0
     error_message = "No public_key specified, you will not be able to login."
   }
 }
