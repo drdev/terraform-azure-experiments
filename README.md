@@ -78,3 +78,4 @@
 
 1. Add Azure Service Plan for web application
 2. Build Azure DevOps pipelines to deploy an app to infrastructure
+3. Decide on file structure and resources organization
