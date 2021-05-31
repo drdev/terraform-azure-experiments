@@ -167,3 +167,15 @@ resource "azurerm_network_interface_backend_address_pool_association" "lb-backen
   count = var.backend_pool_size
 }
 
+resource "azurerm_app_service_plan" "main" {
+  name                = "main-appserviceplan"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  kind                = "Linux"
+  reserved            = true
+
+  sku {
+    tier = "Free"
+    size = "F1"
+  }
+}
