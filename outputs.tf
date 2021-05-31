@@ -1,5 +1,5 @@
-output "application-environment" {
-  value = var.application-environment
+output "environment" {
+  value = var.environment
 }
 
 output "public-ip" {

@@ -1,5 +1,5 @@
 locals {
-  environment = lower(var.application-environment)
+  environment = lower(var.environment)
 }
 
 terraform {

@@ -1,10 +1,10 @@
-variable "application-environment" {
+variable "environment" {
   description = "Environment name"
   type = string
   default = "DEV"
 
   validation {
-    condition = contains(["DEV", "PROD"], var.application-environment)
+    condition = contains(["DEV", "PROD"], var.environment)
     error_message = "Only “DEV” and “PROD” values allowed."
   }
 }
