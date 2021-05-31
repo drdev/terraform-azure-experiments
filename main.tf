@@ -17,7 +17,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "main" {
-  name     = "endava-test-task-${local.environment}-resources"
+  name     = var.resource_group_name
   location = "West Europe"
 }
 

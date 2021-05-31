@@ -29,3 +29,9 @@ variable "admin" {
     error_message = "No public_key specified, you will not be able to login."
   }
 }
+
+variable "resource_group_name" {
+  type    = string
+  default = "terraform-experiments"
+  description = "Azure resource group name for created infrastructure resources"
+}
