@@ -1,5 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/terraform
 
+### IDEA IDE ###
+
+.idea/*
+
 ### Terraform ###
 # Local .terraform directories
 **/.terraform/*
