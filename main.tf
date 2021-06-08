@@ -28,7 +28,6 @@ resource "azurerm_virtual_network" "main" {
   location            = azurerm_resource_group.main.location
 }
 
-
 resource "azurerm_subnet" "internal" {
   resource_group_name  = azurerm_resource_group.main.name
   name                 = "subnet-internal"
@@ -37,58 +36,40 @@ resource "azurerm_subnet" "internal" {
 }
 
 resource "azurerm_network_security_group" "http" {
+  name = "web-security-group"
   location = azurerm_resource_group.main.location
-  name = "vnet-security-group"
   resource_group_name = azurerm_resource_group.main.name
+
 
   security_rule {
-    access = "allow"
-    direction = "inbound"
-    name = "allow-http"
-    priority = 200
-    source_address_prefix = "Internet"
-    source_port_range = "*"
+    name                       = "allow-http"
+    access                     = "allow"
+    direction                  = "inbound"
+    priority                   = 200
+    source_address_prefix      = "Internet"
+    source_port_range          = "*"
     destination_address_prefix = "*"
-    destination_port_range = "80"
-    description = "Allow HTTP service in vnet"
-    protocol = "*"
+    destination_port_range     = "80"
+    description                = "Allow HTTP service in vnet"
+    protocol                   = "tcp"
   }
 }
 
-resource "azurerm_network_interface_security_group_association" "http" {
-  network_interface_id = azurerm_network_interface.main[count.index].id
+
+resource "azurerm_subnet_network_security_group_association" "http" {
+  subnet_id                 = azurerm_subnet.internal.id
   network_security_group_id = azurerm_network_security_group.http.id
-
-  count = var.backend_pool_size
 }
 
-resource "azurerm_network_interface" "main" {
-  name                = "nic-vm-${count.index}"
-  location            = azurerm_resource_group.main.location
+resource "azurerm_linux_virtual_machine_scale_set" "app-vmss" {
+  location = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  name = "app-vmss"
+  admin_username = var.admin.username
+  instances = var.backend_pool_size
+  sku = "Standard_B1ls"
 
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.internal.id
-    private_ip_address_allocation = "Dynamic"
-  }
-
-  count = var.backend_pool_size
-}
-
-resource "azurerm_linux_virtual_machine" "main" {
-  resource_group_name   = azurerm_resource_group.main.name
-  name                  = "${local.environment}-vm-${count.index}"
-  location              = azurerm_resource_group.main.location
-  network_interface_ids = [azurerm_network_interface.main[count.index].id]
-  size               = "Standard_B1ls"
-  admin_username        = "endava"
-  disable_password_authentication = true
-
-  admin_ssh_key {
-    username   = "endava"
-    public_key = file("~/.ssh/id_rsa.pub")
-  }
+  // Image
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
@@ -96,22 +77,41 @@ resource "azurerm_linux_virtual_machine" "main" {
     version   = "latest"
   }
 
+  // Storage
   os_disk {
-    caching           = "ReadWrite"
+    caching = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
+  // Network Interfaces
+  network_interface {
+    name = "internal-nic"
+    primary = true
+    network_security_group_id = azurerm_network_security_group.http.id
+
+    ip_configuration {
+      name = "internal"
+      subnet_id = azurerm_subnet.internal.id
+      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.app-pool.id]
+    }
+  }
+
+  // Auth settings
+  disable_password_authentication = true
+  admin_ssh_key {
+    username   = var.admin.username
+    public_key = var.admin.public_key
+  }
+
+  // Provision
   custom_data = base64encode(file("./scripts/cloud-config-nginx.yaml"))
 
   tags = {
     environment = local.environment
   }
-
-  count = var.backend_pool_size
 }
 
 // Load Balancer Config
-
 resource "azurerm_public_ip" "main" {
   name                = "${local.environment}-public-ip"
   location            = azurerm_resource_group.main.location
@@ -158,12 +158,5 @@ resource "azurerm_lb_probe" "http" {
 resource "azurerm_lb_backend_address_pool" "app-pool" {
   loadbalancer_id     = azurerm_lb.main.id
   name                = "${local.environment}-app-pool"
-}
-
-resource "azurerm_network_interface_backend_address_pool_association" "lb-backend" {
-  network_interface_id    = azurerm_network_interface.main[count.index].id
-  ip_configuration_name   = "internal"
-  backend_address_pool_id = azurerm_lb_backend_address_pool.app-pool.id
-  count = var.backend_pool_size
 }
 
