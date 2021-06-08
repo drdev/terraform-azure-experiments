@@ -3,7 +3,7 @@
 1. [Goals](#goals)
 2. [Description](#description)
 3. [System requirements](#system-requirements)
-4. [Test Chef cookbook](#test-chef-cookbook)
+4. [Build infrastructure within Azure Cloud](build-infrastructure-within-azure-cloud)
 5. [To do](#to-do)
 
 
